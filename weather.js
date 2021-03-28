@@ -1,15 +1,24 @@
 const axios = require('axios');
-const chalk = require('chalk');
 const config = require('./config.json');
 const helpers = require('./helpers');
 const moment = require('moment');
-const emoji = require('node-emoji');
-
 
 
 let city = Symbol();
-let apiUrl = Symbol();
-let apiKey = Symbol();
+
+// Weather api
+
+let weatherApiUrl = Symbol();
+let weatherApiKey = Symbol();
+
+// Country api
+
+let countryApiUrl = Symbol();
+
+// Timezone api
+
+let timezoneApiUrl = Symbol();
+let timezoneApiKey = Symbol();
 
 
 class Weather {
@@ -17,44 +26,127 @@ class Weather {
     constructor(cityName) {
 
         this[city] = cityName;
-        this[apiUrl] = config.apiUrl;
-        this[apiKey] = config.apiKey;
+
+        this[weatherApiUrl] = config.weatherApiUrl;
+        this[weatherApiKey] = config.weatherApiKey;
+
+        this[countryApiUrl] = config.countryApiUrl;
+
+        this[timezoneApiUrl] = config.timezoneApiUrl;
+        this[timezoneApiKey] = config.timezoneApiKey;
     }
 
-    async currentByCityName() {
 
-        try {
+    /**
+     * Get current weather data by city name
+     * 
+     */
+    currentByCityName() {
 
-            console.log(`${emoji.get('hourglass_flowing_sand')} ${chalk.bold('Start searching...\n')}`);
+        return new Promise(async (res, rej) => {
 
-            let data = await axios.get(`${this[apiUrl]}?q=${this[city]}&appid=${this[apiKey]}`);
+            try {
 
-            if (data.data) {
+                let data = await this.getCurrentWeatherByCity();
 
-                let time = await axios.get(`https://timezone.abstractapi.com/v1/current_time?api_key=468b2a5d4adf4301836e7459942d7bae&location=${data.data.name}`)
+                if (data) {
 
-                if (time.data) {
+                    let time = await this.getCountryTimezoneByName(data.name);
 
-                    let country = await axios.get(`https://restcountries.eu/rest/v2/alpha/${data.data.sys.country}`);
+                    if (time) {
 
-                    if (country.data) {
+                        let country = await this.getCountryNameByCode(data.sys.country);
 
-                        let celsius = helpers.kelvinToCelsius(data.data.main.temp);
+                        if (country) {
 
-                        console.log(chalk.blue.bold(`${emoji.get('sun_with_face')} ${celsius}°`));
+                            let celsius = helpers.kelvinToCelsius(data.main.temp);
 
-                        let currentTime = moment(time.data.datetime).format('lll');
+                            let currentTime = moment(time.datetime).format('lll');
 
-                        console.log(chalk.yellow.bold(`${emoji.get('cityscape')}  ${data.data.name}, ${country.data.name}`));
-
-                        console.log(chalk.green.bold(`${emoji.get('timer_clock')}  ${currentTime}`));
+                            res({
+                                currentTemp: celsius,
+                                time: currentTime,
+                                location: `${data.name}, ${country.name}`
+                            });
+                        }
                     }
                 }
-            }
-        } catch (e) {
+            } catch (e) {
 
-            console.log(chalk.white.bgRed.bold('Something went wrong!'));
-        }
+                rej(e);
+            }
+        });
+    }
+
+
+    /**
+     * Get current weather data by city name
+     * 
+     * @returns 
+     */
+    getCurrentWeatherByCity() {
+
+        return new Promise(async (res, rej) => {
+
+            try {
+
+                let data = await axios.get(`${this[weatherApiUrl]}?q=${this[city]}&appid=${this[weatherApiKey]}`);
+
+                if (data.status === 200) res(data.data);
+
+            } catch (e) {
+
+                rej(e);
+            }
+        });
+    }
+
+
+    /**
+     * Get country name by its code
+     * 
+     * @param {*} countryCode 
+     * @returns 
+     */
+    getCountryNameByCode(countryCode) {
+
+        return new Promise(async (res, rej) => {
+
+            try {
+
+                let country = await axios.get(`${this[countryApiUrl]}/${countryCode}`);
+
+                if (country.status === 200) res(country.data);
+
+            } catch (e) {
+
+                rej(e);
+            }
+        });
+    }
+
+
+    /**
+     * Get current time by country name
+     * 
+     * @param {*} countryName 
+     * @returns 
+     */
+    getCountryTimezoneByName(countryName) {
+
+        return new Promise(async (res, rej) => {
+
+            try {
+
+                let time = await axios.get(`${this[timezoneApiUrl]}?api_key=${this[timezoneApiKey]}=${countryName}`);
+
+                if (time.status === 200) res(time.data);
+
+            } catch (e) {
+
+                rej(e);
+            }
+        });
     }
 }
 

@@ -1,23 +1,18 @@
 const yargs = require('yargs/yargs');
-const chalk = require('chalk');
 const {
     hideBin
 } = require('yargs/helpers');
-const Weather = require('./weather');
-const argv = yargs(hideBin(process.argv)).argv
-const Table = require('cli-table');
+const argv = yargs(hideBin(process.argv)).argv;
+const flags = require('./flags');
 
 
 if (argv.hasOwnProperty('city') && argv.hasOwnProperty('d')) {
 
-   console.log('we are working on it...');
-  
-}
-else if(argv.hasOwnProperty('city')){
+    console.log('we are working on it...');
 
-    let currentData = new Weather(argv.city);
+} else if (argv.hasOwnProperty('city')) {
 
-    currentData.currentByCityName();
+    flags.city(argv.city);
 }
 
 

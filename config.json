@@ -1,4 +1,7 @@
 {
-    "apiUrl": "https://api.openweathermap.org/data/2.5/weather",
-    "apiKey": "5c3ef0f58144aafdbfede6a6be586f40"
+    "weatherApiUrl": "https://api.openweathermap.org/data/2.5/weather",
+    "weatherApiKey": "5c3ef0f58144aafdbfede6a6be586f40",
+    "countryApiUrl": "https://restcountries.eu/rest/v2/alpha",
+    "timezoneApiUrl": "https://timezone.abstractapi.com/v1/current_time",
+    "timezoneApiKey": "468b2a5d4adf4301836e7459942d7bae&location"
 }
